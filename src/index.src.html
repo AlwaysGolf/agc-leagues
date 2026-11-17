@@ -156,9 +156,9 @@ body.tv{background:var(--forest);color:var(--sand);overflow:hidden;cursor:none;f
    use the built-in snapshot (preview mode).
    ============================================================ */
 const CONFIG = {
-  hubLeaguesCsv: "",   // League Hub sheet → "Leagues" tab (League | Leaderboard CSV | Website | TV)
-  hubPromosCsv:  "",   // League Hub sheet → "TV Promos" tab
-  recordsCsv:    "",   // AGC League Records sheet
+  hubLeaguesCsv: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxf-_vJ7v7SrC716B9KgZjePZV6RPzw6ROULRgvfH0IrAaHkodO1aHACRG2pMImgyNrAXhxxqPUide/pub?single=true&output=csv&gid=700965191",   // League Hub sheet → "Leagues" tab (League | Leaderboard CSV | Website | TV)
+  hubPromosCsv:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxf-_vJ7v7SrC716B9KgZjePZV6RPzw6ROULRgvfH0IrAaHkodO1aHACRG2pMImgyNrAXhxxqPUide/pub?single=true&output=csv&gid=322563762",   // League Hub sheet → "TV Promos" tab
+  recordsCsv:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vS48mEStTfCQMCrTg5ffqU8EeX6HcbGGSiG_WE2bCEl5xXm6t8e-o6kJcc2fzloXNrktY-1TW51IoHN/pub?gid=0&single=true&output=csv",   // AGC League Records sheet
   seasonLabel: "Nov–Dec 2026 Session",
   siteUrl: "leagues.alwaysgolf.com",
   refreshMinutes: 5,
@@ -432,7 +432,7 @@ setInterval(tick,15000);
 /* ---------------- Boot ---------------- */
 const isTV=()=>location.hash==="#tv"||/[?&]tv(=1)?(&|$)/.test(location.search);
 async function boot(){
-  try{await load();}catch(e){console.error(e);if(!DATA.leagues.length){document.getElementById("app").innerHTML='<div class="empty">Standings are taking a breather. Try again in a minute.</div>';}}
+  try{await load();if(!DATA.leagues.length)throw new Error("no leagues");}catch(e){console.error(e);try{const c=CONFIG.hubLeaguesCsv;CONFIG.hubLeaguesCsv="";await load();CONFIG.hubLeaguesCsv=c;}catch(_){}if(!DATA.leagues.length){document.getElementById("app").innerHTML='<div class="empty">Standings are taking a breather. Try again in a minute.</div>';}}
   isTV()?renderTV():renderSite();
 }
 boot();
