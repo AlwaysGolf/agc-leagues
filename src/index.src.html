@@ -145,6 +145,9 @@ body.tv{background:var(--forest);color:var(--sand);overflow:hidden;cursor:none;f
 .tv-rec .r{font-size:3.2em;font-weight:900;line-height:1.1}
 .tv-rec .w{font-size:1.8em;font-weight:800}
 .tv-rec .m{font-size:1.4em;color:#bcd6c4;font-weight:600}
+.spons{display:grid;grid-template-columns:repeat(3,1fr);gap:1.8em;margin-top:.6em}
+.sp{background:#fff;border-radius:1.2em;height:14em;display:flex;align-items:center;justify-content:center;padding:1.8em 2.4em;box-shadow:0 .8em 2.4em rgba(0,0,0,.25)}
+.sp img{max-width:100%;max-height:100%;object-fit:contain}
 </style>
 </head>
 <body>
@@ -164,6 +167,15 @@ const CONFIG = {
   refreshMinutes: 5,
   tvSeconds: 14,
   tvRowsPerColumn: 8,
+  // Sponsor slide on the TV (logos live in /sponsors). Remove a line to drop a sponsor.
+  sponsors: [
+    {name:"Joyce Buick GMC", logo:"sponsors/joyce.png"},
+    {name:"Garage Beer", logo:"sponsors/garage-beer.png"},
+    {name:"The Chisholm Agency", logo:"sponsors/chisholm.png"},
+    {name:"Dumpsters.com", logo:"sponsors/dumpsters.png"},
+    {name:"Antonio's Real Italian Pizza", logo:"sponsors/antonios.png"},
+    {name:"Golf Glove Club", logo:"sponsors/golf-glove-club.png"},
+  ],
 };
 const ASSETS = { logo:"__LOGO__", logoInverse:"__LOGOINV__", coin:"__COIN__" };
 const SNAPSHOT = /*SNAPSHOT*/;
@@ -381,6 +393,7 @@ function buildSlides(){
   leagues.forEach((L,i)=>{out.push({type:"league",L});if(promos.length){out.push({type:"promo",P:promos[p%promos.length]});p++;}});
   if(DATA.records.length) out.push({type:"records"});
   while(p<promos.length){out.push({type:"promo",P:promos[p++]});}
+  if((CONFIG.sponsors||[]).length) out.splice(Math.ceil(out.length/2),0,{type:"sponsors"});
   return out;
 }
 function tvLeagueHTML(L){
@@ -412,13 +425,17 @@ function tvRecordsHTML(){
   return `<div class="s-kicker">Think you can beat these?</div><div class="s-title">AGC League Records</div>
   <div class="tv-recs">${DATA.records.slice(0,9).map(r=>`<div class="tv-rec"><div class="c">${esc(r.cat)}</div><div class="r">${esc(r.rec)}</div>${r.who?`<div class="w">${esc(r.who)}</div>`:""}<div class="m">${esc([r.course,r.season].filter(Boolean).join(" · "))}</div></div>`).join("")}</div>`;
 }
+function tvSponsorsHTML(){
+  return `<div class="s-kicker">Thanks to our partners</div><div class="s-title">Proudly Supported By</div>
+  <div class="spons">${CONFIG.sponsors.map(x=>`<div class="sp"><img src="${esc(x.logo)}" alt="${esc(x.name)}"></div>`).join("")}</div>`;
+}
 function renderTV(){
   document.body.className="tv";document.body.ondblclick=()=>{if(DATA.source==="snapshot")location.hash="";};
   const slides=buildSlides();
   if(tvIndex>=slides.length)tvIndex=0;
   document.getElementById("app").innerHTML=`<div class="tv-wrap">
     <div class="tv-bar"><img src="${ASSETS.logoInverse}" alt="Always Golf Club"><div class="tv-clock num" id="clock"></div></div>
-    <div class="tv-stage">${slides.map((s,i)=>`<section class="slide${i===tvIndex?" on":""}">${s.type==="league"?tvLeagueHTML(s.L):s.type==="promo"?tvPromoHTML(s.P):tvRecordsHTML()}</section>`).join("")}</div>
+    <div class="tv-stage">${slides.map((s,i)=>`<section class="slide${i===tvIndex?" on":""}">${s.type==="league"?tvLeagueHTML(s.L):s.type==="promo"?tvPromoHTML(s.P):s.type==="sponsors"?tvSponsorsHTML():tvRecordsHTML()}</section>`).join("")}</div>
     <div class="tv-foot"><div class="tv-cta"><div class="qr">${qrSvg(CONFIG.siteUrl)}</div><div>Live standings on your phone<br><b>${esc(CONFIG.siteUrl)}</b></div></div><div class="dots">${slides.map((s,i)=>`<i class="${i===tvIndex?"on":""}"></i>`).join("")}</div></div>
     <div class="progress" id="prog"></div></div>`;
   tick();startProgress();
