@@ -2568,7 +2568,7 @@ function parseRecords(csv){
 
 /* ---------------- Data loading ---------------- */
 let DATA={leagues:[],promos:[],records:[],updated:null,source:"snapshot"};
-async function getText(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error(r.status);return r.text();}
+async function getText(url){let err;for(let i=0;i<4;i++){try{const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error(r.status);return await r.text();}catch(e){err=e;await new Promise(z=>setTimeout(z,800*(i+1)));}}throw err;}
 async function load(){
   if(!CONFIG.hubLeaguesCsv){
     DATA={leagues:SNAPSHOT.leagues.map(l=>parseLeague(l.csv,l)).filter(Boolean),promos:SNAPSHOT.promos,records:parseRecords(SNAPSHOT.records),updated:new Date(SNAPSHOT.asOf),source:"snapshot"};
@@ -2576,10 +2576,12 @@ async function load(){
   }
   const hub=rowsToObjects(await getText(CONFIG.hubLeaguesCsv));
   const metas=hub.map(o=>({name:pick(o,"league"),url:pick(o,"leaderboard","csv","link"),site:!/^n/i.test(pick(o,"website","site")),tv:!/^n/i.test(pick(o,"tv"))})).filter(m=>m.name&&m.url);
-  const leagues=(await Promise.all(metas.map(async m=>{try{return parseLeague(await getText(m.url),m);}catch(e){console.warn("league failed",m.name,e);return null;}}))).filter(Boolean);
-  let promos=[],records=[];
+  const prev=DATA.source==="live"?DATA:{leagues:[],promos:[],records:[]};
+  const leagues=(await Promise.all(metas.map(async m=>{try{return parseLeague(await getText(m.url),m);}catch(e){console.warn("league failed",m.name,e);return prev.leagues.find(l=>l.name===m.name)||null;}}))).filter(Boolean);
+  let promos=prev.promos,records=prev.records;
   try{if(CONFIG.hubPromosCsv)promos=parsePromos(await getText(CONFIG.hubPromosCsv));}catch(e){console.warn(e);}
   try{if(CONFIG.recordsCsv)records=parseRecords(await getText(CONFIG.recordsCsv));}catch(e){console.warn(e);}
+  if(!records.length)records=parseRecords(SNAPSHOT.records);
   DATA={leagues,promos,records,updated:new Date(),source:"live"};
 }
 
