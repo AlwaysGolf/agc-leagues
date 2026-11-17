@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>League Standings · Always Golf Club</title>
+<meta name="description" content="Live league standings and weekly results from Always Golf Club, Westlake OH.">
+<meta name="theme-color" content="#12301d">
+<link rel="icon" href="__COIN__">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* AGC brand colors (Brand Guidelines 2024). Swap here if the palette ever changes. */
+:root{
+  --grass:#319e59; --sand:#fff7d4; --forest:#12301d; --fairway:#1e5231;
+  --yellow:#f2e266; --orange:#d86b3e; --birdie:#298cba;
+  --ink:#12301d; --muted:#4d6656; --line:#e6dcb4; --card:#fffcec;
+  --font:"Greycliff CF","Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--sand);color:var(--ink);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Website ---------- */
+.top{background:var(--forest);color:var(--sand);padding:18px 16px 0}
+.top-inner{max-width:880px;margin:0 auto}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand img{height:44px;width:auto;display:block}
+.brand a{color:var(--sand);text-decoration:none;font-weight:600;font-size:14px;opacity:.85}
+.hero{padding:18px 0 14px}
+.hero h1{margin:0;font-size:30px;font-weight:900;letter-spacing:-.01em}
+.hero p{margin:4px 0 0;color:#cfe3d4;font-size:14px}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:0;margin:0 -16px;padding:0 16px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:0;background:transparent;color:#cfe3d4;padding:11px 14px 13px;font-weight:700;font-size:15px;border-radius:12px 12px 0 0;cursor:pointer;white-space:nowrap}
+.tab[aria-selected=true]{background:var(--sand);color:var(--forest)}
+main{max-width:880px;margin:0 auto;padding:16px 16px 40px}
+.lg-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 14px;margin:4px 0 12px}
+.lg-head h2{margin:0;font-size:24px;font-weight:900}
+.status{font-size:13px;color:var(--muted);font-weight:600}
+.status b{color:var(--fairway)}
+.pill{display:inline-block;background:var(--yellow);color:var(--forest);font-weight:800;font-size:12px;padding:3px 8px;border-radius:999px;margin-left:6px;vertical-align:2px}
+.controls{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.seg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:0 0 auto;border:1.5px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--grass);border-color:var(--grass);color:#fff}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters .seg button{font-size:13px;padding:5px 10px}
+.search{flex:1 1 180px;min-width:0;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px;font:inherit;font-size:15px;color:var(--ink)}
+.search:focus{outline:2px solid var(--grass);outline-offset:1px}
+.board{background:var(--card);border:1.5px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);cursor:pointer;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.row:first-child{border-top:0}
+.row:hover{background:#fff8dc}
+.row.head{cursor:default;background:var(--fairway);color:var(--sand);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px}
+.row.head:hover{background:var(--fairway)}
+.rk{font-weight:900;font-size:18px;text-align:center}
+.rk.top1{color:var(--forest);background:var(--yellow);border-radius:10px;padding:4px 0}
+.nm{min-width:0}
+.nm .t{font-weight:800;font-size:16px;line-height:1.2;overflow-wrap:anywhere}
+.nm .s{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px}
+.stats{display:flex;gap:16px;text-align:right}
+.stat .v{font-weight:900;font-size:19px}
+.stat .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.row.head .stats{gap:16px}
+.row.head .stat{min-width:44px}
+.stat{min-width:44px}
+.detail{grid-column:1/-1;display:none;padding:4px 0 2px}
+.row.open .detail{display:block}
+.wk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.wk{background:var(--sand);border-radius:10px;padding:7px 8px;text-align:center}
+.wk .a{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase}
+.wk .b{font-size:17px;font-weight:900}
+.wk .c{font-size:12px;color:var(--muted);font-weight:600}
+.wk.na{opacity:.45}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font-weight:600}
+.note{font-size:13px;color:var(--muted);margin:10px 2px 0;line-height:1.45}
+.records{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.rec{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px}
+.rec .c{font-size:12px;font-weight:800;color:var(--grass);text-transform:uppercase;letter-spacing:.06em}
+.rec .r{font-size:28px;font-weight:900;margin:2px 0}
+.rec .w{font-weight:800}
+.rec .m{font-size:13px;color:var(--muted);font-weight:600}
+footer{max-width:880px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:13px;line-height:1.5}
+footer a{color:var(--fairway);font-weight:700}
+.updated{font-size:12px;color:var(--muted);margin-top:8px}
+@media (max-width:420px){.stats{gap:10px}.stat{min-width:38px}.stat .v{font-size:17px}.hero h1{font-size:26px}}
+
+/* ---------- TV mode (16:9, scales with screen width) ---------- */
+body.tv{background:var(--forest);color:var(--sand);overflow:hidden;cursor:none;font-size:1vw;height:100vh}
+.tv-wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+.tv-bar{display:flex;align-items:center;justify-content:space-between;padding:1.4em 3em .6em}
+.tv-bar img{height:3.6em}
+.tv-clock{font-size:2.2em;font-weight:800;color:#cfe3d4}
+.tv-stage{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0 3em;opacity:0;transition:opacity .8s ease;display:flex;flex-direction:column}
+.slide.on{opacity:1}
+.tv-foot{display:flex;align-items:center;justify-content:space-between;gap:2em;padding:.8em 3em 1.4em}
+.tv-cta{display:flex;align-items:center;gap:1em;font-size:1.4em;font-weight:700;color:#cfe3d4}
+.tv-cta b{color:var(--yellow)}
+.qr{background:#fff;border-radius:.5em;padding:.35em;line-height:0}
+.qr svg{width:100%;height:100%;display:block}
+.tv-cta .qr{width:4.6em;height:4.6em}
+.dots{display:flex;gap:.6em}
+.dots i{width:1em;height:1em;border-radius:50%;background:#2c5a3c}
+.dots i.on{background:var(--grass)}
+.progress{position:fixed;left:0;bottom:0;height:.45em;background:var(--grass);width:0}
+.s-kicker{font-size:1.45em;font-weight:800;color:var(--grass);text-transform:uppercase;letter-spacing:.08em}
+.s-title{font-size:3.8em;font-weight:900;line-height:1;margin:.1em 0 .35em}
+.s-title .pill{font-size:.32em;vertical-align:.7em;margin-left:.6em;padding:.25em .7em}
+.tv-board{display:grid;gap:2em;align-content:start}
+.tv-board.two{grid-template-columns:1fr 1fr}
+.tv-col{display:flex;flex-direction:column;gap:.35em}
+.tv-row{display:grid;grid-template-columns:2.8em 1fr 3.4em 3.4em;align-items:center;gap:.8em;background:var(--fairway);border-radius:.55em;padding:.32em .9em;font-size:1.55em}
+.tv-row.h{background:none;padding:0 1.25em;font-size:.95em;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9fc1aa}
+.tv-row .r{font-weight:900;text-align:center}
+.tv-row.lead{background:var(--grass)}
+.tv-row.lead .r{background:var(--yellow);color:var(--forest);border-radius:.4em}
+.tv-row .n{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-row .n small{font-size:.62em;margin-left:.7em;font-weight:600;color:#bcd6c4}
+.tv-row.lead .n small{color:#e7f5ea}
+.tv-row .p{font-weight:900;text-align:right;font-size:1.15em}
+.tv-row .k{text-align:right;color:#cfe3d4;font-weight:700}
+.tv-side{display:flex;gap:1.4em;margin-top:1em}
+.chip{background:var(--fairway);border-radius:.7em;padding:.55em 1em;font-size:1.35em}
+.chip .a{font-size:.7em;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.08em}
+.chip .b{font-weight:800}
+.promo{display:grid;grid-template-columns:1.3fr 1fr;gap:4em;align-items:center;height:100%}
+.promo.noimg{grid-template-columns:1fr}
+.promo h3{font-size:5.2em;font-weight:900;line-height:.98;margin:.15em 0 .25em}
+.promo .when{font-size:2.1em;font-weight:800;color:var(--yellow);margin-bottom:.5em}
+.promo .det{font-size:1.75em;line-height:1.35;color:#e9f1e6;max-width:30em}
+.promo .go{display:flex;align-items:center;gap:1.2em;margin-top:1.6em;font-size:1.6em;font-weight:800}
+.promo .go .qr{width:5.5em;height:5.5em}
+.promo .go span b{color:var(--yellow);display:block}
+.promo .img{height:100%;display:flex;align-items:center;justify-content:center;padding:1em 0}
+.promo .img img{max-height:100%;max-width:100%;border-radius:1em;box-shadow:0 1.5em 4em rgba(0,0,0,.45)}
+.tv-recs{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4em}
+.tv-rec{background:var(--fairway);border-radius:1em;padding:1.3em 1.5em}
+.tv-rec .c{font-size:1.4em;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.06em}
+.tv-rec .r{font-size:3.2em;font-weight:900;line-height:1.1}
+.tv-rec .w{font-size:1.8em;font-weight:800}
+.tv-rec .m{font-size:1.4em;color:#bcd6c4;font-weight:600}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>/*QRLIB*/</script>
+<script>
+/* ============================================================
+   SETUP: paste "Publish to web" CSV links here. Leave blank to
+   use the built-in snapshot (preview mode).
+   ============================================================ */
+const CONFIG = {
+  hubLeaguesCsv: "",   // League Hub sheet → "Leagues" tab (League | Leaderboard CSV | Website | TV)
+  hubPromosCsv:  "",   // League Hub sheet → "TV Promos" tab
+  recordsCsv:    "",   // AGC League Records sheet
+  seasonLabel: "Nov–Dec 2026 Session",
+  siteUrl: "leagues.alwaysgolf.com",
+  refreshMinutes: 5,
+  tvSeconds: 14,
+  tvRowsPerColumn: 8,
+};
+const ASSETS = { logo:"__LOGO__", logoInverse:"__LOGOINV__", coin:"__COIN__" };
+const SNAPSHOT = /*SNAPSHOT*/;
+
+/* ---------------- CSV ---------------- */
+function parseCSV(t){
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){ if(c=='"'){ if(t[i+1]=='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c=='"') q=true;
+    else if(c==','){row.push(f);f="";}
+    else if(c=='\n'||c=='\r'){ if(c=='\r'&&t[i+1]=='\n')i++; row.push(f);rows.push(row);row=[];f=""; }
+    else f+=c;
+  }
+  if(f!==""||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+const clean=s=>(s||"").replace(/\s+/g," ").trim();
+const num=s=>{s=clean(s);if(s===""||/^#/.test(s))return null;const n=Number(s.replace(/,/g,""));return isFinite(n)?n:null;};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>n==null?"–":(Math.round(n*10)/10).toString();
+const DAYS={M:"Mon",MON:"Mon",MONDAY:"Mon",TU:"Tue",TUE:"Tue",TUES:"Tue",TUESDAY:"Tue",W:"Wed",WED:"Wed",WEDNESDAY:"Wed",TH:"Thu",THU:"Thu",THUR:"Thu",THURS:"Thu",THURSDAY:"Thu",F:"Fri",FRI:"Fri",FRIDAY:"Fri",SA:"Sat",SAT:"Sat",SATURDAY:"Sat",SU:"Sun",SUN:"Sun",SUNDAY:"Sun"};
+const DAY_ORDER=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function slotInfo(s){
+  s=clean(s); if(!s) return {night:null,label:""};
+  const m=s.match(/^([A-Za-z]+)\.?\s*(.*)$/); let night=null,rest=s;
+  if(m&&DAYS[m[1].toUpperCase()]){night=DAYS[m[1].toUpperCase()];rest=m[2];}
+  rest=rest.replace(/(\d{1,2}:\d{2}):00/,"$1");
+  return {night,label:(night?night+" ":"")+rest};
+}
+
+/* ---------------- League sheet → data ---------------- */
+function parseLeague(csv, meta){
+  const rows=parseCSV(csv);
+  const hi=rows.findIndex(r=>r.some(c=>/^(TEAM|PLAYER)\s*NAME$/i.test(clean(c))));
+  if(hi<0) return null;
+  const H=rows[hi].map(clean);
+  const col=re=>H.findIndex(h=>re.test(h));
+  const iName=col(/^(TEAM|PLAYER)\s*NAME$/i), iNum=col(/^(TEAM|PLAYER)\s*#$/i), iSlot=col(/TIME\s*SLOT/i),
+        iPts=col(/^TOTAL\s*POINTS/i), iStk=col(/^TOTAL\s*STROKES/i);
+  const kind=/PLAYER/i.test(H[iName])?"player":"team";
+  let title=meta.name;
+  if(!title){for(let i=0;i<hi;i++){const c=rows[i].map(clean).find(x=>/leaderboard/i.test(x));if(c){title=c.replace(/\s*leaderboard\s*/i,"").trim();break;}}}
+  const weeks={};
+  H.forEach((h,i)=>{let m=h.match(/^WEEK\s*(\d+)\s*PTS\s*(?:\(([\d.]+)\s*x\))?/i);
+    if(m){const n=+m[1];(weeks[n]=weeks[n]||{n}).pts=i;if(m[2])weeks[n].mult=+m[2];}
+    m=h.match(/^WEEK\s*(\d+)\s*STROKES/i); if(m){const n=+m[1];(weeks[n]=weeks[n]||{n}).stk=i;}
+  });
+  const W=Object.values(weeks).filter(w=>w.stk!=null).sort((a,b)=>a.n-b.n);
+  const entries=[];
+  for(let r=hi+1;r<rows.length;r++){
+    const row=rows[r], name=clean(row[iName]);
+    if(!name||name==="0"||/=$/.test(name)) continue;
+    if(iNum>=0&&num(row[iNum])==null) continue;
+    const si=slotInfo(iSlot>=0?row[iSlot]:"");
+    const wk={};let rounds=0,stSum=0;
+    W.forEach(w=>{const s=num(row[w.stk]);if(s!=null&&s>0){wk[w.n]={pts:w.pts!=null?num(row[w.pts]):null,stk:s};rounds++;stSum+=s;}});
+    entries.push({name,night:si.night,slot:si.label,total:iPts>=0?(num(row[iPts])??0):0,strokes:iStk>=0?(num(row[iStk])??stSum):stSum,wk,rounds,avg:rounds?stSum/rounds:null});
+  }
+  const played=W.filter(w=>entries.some(e=>e.wk[w.n]));
+  const cur=played.length?played[played.length-1].n:0;
+  const anyPts=entries.some(e=>e.total>0);
+  const mode=anyPts?"points":(played.length?"strokes":"none");
+  rank(entries,mode);
+  const nights=[...new Set(entries.map(e=>e.night).filter(Boolean))].sort((a,b)=>DAY_ORDER.indexOf(a)-DAY_ORDER.indexOf(b));
+  return {id:meta.id||slug(title),name:title,kind,mode,weeks:W.map(w=>({n:w.n,mult:w.mult||1})),played:played.map(w=>w.n),cur,entries,nights,site:meta.site!==false,tv:meta.tv!==false};
+}
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+function rank(list,mode){
+  if(mode==="points") list.sort((a,b)=>b.total-a.total||a.strokes-b.strokes||a.name.localeCompare(b.name));
+  else list.sort((a,b)=>(a.avg??1e9)-(b.avg??1e9)||b.rounds-a.rounds||a.name.localeCompare(b.name));
+  const key=e=>mode==="points"?e.total:(e.avg==null?null:Math.round(e.avg*10));
+  list.forEach((e,i)=>{
+    if(mode!=="points"&&e.avg==null){e.rank=null;e.rankLabel="–";return;}
+    const k=key(e); const first=list.findIndex(x=>key(x)===k); const ties=list.filter(x=>key(x)===k).length;
+    e.rank=first+1; e.rankLabel=(ties>1?"T":"")+(first+1);
+  });
+}
+function weekList(L,n){
+  const out=L.entries.filter(e=>e.wk[n]).map(e=>({...e,wpts:e.wk[n].pts,wstk:e.wk[n].stk}));
+  const usePts=L.mode==="points"&&out.some(e=>e.wpts!=null);
+  out.sort((a,b)=>usePts?((b.wpts??-1)-(a.wpts??-1)||a.wstk-b.wstk):a.wstk-b.wstk);
+  const key=e=>usePts?e.wpts:e.wstk;
+  out.forEach(e=>{const k=key(e);const f=out.findIndex(x=>key(x)===k);const t=out.filter(x=>key(x)===k).length;e.rankLabel=(t>1?"T":"")+(f+1);e.rank=f+1;});
+  return {list:out,usePts,posted:out.length,total:L.entries.length};
+}
+
+/* ---------------- Promos / records ---------------- */
+function rowsToObjects(csv){
+  const rows=parseCSV(csv).filter(r=>r.some(c=>clean(c)));
+  const hi=rows.findIndex(r=>r.filter(c=>clean(c)).length>=2);
+  if(hi<0)return[];
+  const H=rows[hi].map(h=>clean(h).toLowerCase());
+  return rows.slice(hi+1).map(r=>{const o={};H.forEach((h,i)=>{if(h)o[h]=clean(r[i]);});return o;});
+}
+const pick=(o,...keys)=>{for(const k of keys){for(const ok in o){if(ok.startsWith(k)&&o[ok])return o[ok];}}return "";};
+function parsePromos(csv){
+  const today=new Date();today.setHours(0,0,0,0);
+  return rowsToObjects(csv).map(o=>({headline:pick(o,"headline","title"),when:pick(o,"when","date"),details:pick(o,"details","description"),link:pick(o,"link","url","qr"),image:pick(o,"image"),start:pick(o,"start"),end:pick(o,"end"),show:pick(o,"show","active")}))
+    .filter(p=>p.headline&&!/^n/i.test(p.show)&&(!p.start||new Date(p.start)<=new Date())&&(!p.end||new Date(p.end+" 23:59")>=today));
+}
+function parseRecords(csv){
+  return rowsToObjects(csv).map(o=>({cat:o.category,who:o.player||o.team||"",team:o.player?o.team:"",course:o.course,season:o.season,rec:o.record})).filter(r=>r.cat&&r.rec);
+}
+
+/* ---------------- Data loading ---------------- */
+let DATA={leagues:[],promos:[],records:[],updated:null,source:"snapshot"};
+async function getText(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error(r.status);return r.text();}
+async function load(){
+  if(!CONFIG.hubLeaguesCsv){
+    DATA={leagues:SNAPSHOT.leagues.map(l=>parseLeague(l.csv,l)).filter(Boolean),promos:SNAPSHOT.promos,records:parseRecords(SNAPSHOT.records),updated:new Date(SNAPSHOT.asOf),source:"snapshot"};
+    return;
+  }
+  const hub=rowsToObjects(await getText(CONFIG.hubLeaguesCsv));
+  const metas=hub.map(o=>({name:pick(o,"league"),url:pick(o,"leaderboard","csv","link"),site:!/^n/i.test(pick(o,"website","site")),tv:!/^n/i.test(pick(o,"tv"))})).filter(m=>m.name&&m.url);
+  const leagues=(await Promise.all(metas.map(async m=>{try{return parseLeague(await getText(m.url),m);}catch(e){console.warn("league failed",m.name,e);return null;}}))).filter(Boolean);
+  let promos=[],records=[];
+  try{if(CONFIG.hubPromosCsv)promos=parsePromos(await getText(CONFIG.hubPromosCsv));}catch(e){console.warn(e);}
+  try{if(CONFIG.recordsCsv)records=parseRecords(await getText(CONFIG.recordsCsv));}catch(e){console.warn(e);}
+  DATA={leagues,promos,records,updated:new Date(),source:"live"};
+}
+
+/* ---------------- QR ---------------- */
+function qrSvg(text){
+  try{const q=qrcode(0,"M");q.addData(text.startsWith("http")?text:"https://"+text);q.make();return q.createSvgTag({cellSize:4,margin:0,scalable:true});}catch(e){return "";}
+}
+const prettyUrl=u=>u.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"");
+
+/* ---------------- Website ---------------- */
+const state={league:null,view:"overall",night:"all",q:"",open:new Set()};
+function renderSite(){
+  const leagues=DATA.leagues.filter(l=>l.site);
+  const h=location.hash.slice(1);
+  if(!state.league){state.league=(h==="records"||leagues.some(l=>l.id===h))?h:leagues[0]?.id;}
+  const tabs=[...leagues.map(l=>({id:l.id,name:l.name})),...(DATA.records.length?[{id:"records",name:"Records"}]:[])];
+  const L=leagues.find(l=>l.id===state.league);
+  document.body.className="";
+  document.getElementById("app").innerHTML=`
+  <header class="top"><div class="top-inner">
+    <div class="brand"><a href="https://www.alwaysgolf.com" aria-label="Always Golf Club home"><img src="${ASSETS.logoInverse}" alt="Always Golf Club"></a><a href="https://www.alwaysgolf.com">alwaysgolf.com →</a></div>
+    <div class="hero"><h1>League Standings</h1><p>${esc(CONFIG.seasonLabel)} · Updated after every league night</p></div>
+    <nav class="tabs" role="tablist">${tabs.map(t=>`<button class="tab" role="tab" aria-selected="${t.id===state.league}" data-tab="${t.id}">${esc(t.name)}</button>`).join("")}</nav>
+  </div></header>
+  <main>${state.league==="records"?recordsHTML():L?leagueHTML(L):`<div class="empty">No leagues yet.</div>`}</main>
+  <footer>Scores are posted by our league commissioner after each round, and standings update automatically. See something off? Let us know at the bar.<br>
+  <a href="https://www.alwaysgolf.com">Always Golf Club</a> · 25027 Center Ridge Rd, Westlake OH
+  ${DATA.source==="snapshot"?`<div class="updated"><a href="#tv">▶ Preview the TV slideshow</a> (on the TV it fills the screen and loops)</div>`:""}<div class="updated">${DATA.source==="snapshot"?"Preview data from "+DATA.updated.toLocaleDateString():"Last checked "+DATA.updated.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</div></footer>`;
+  bindSite();
+}
+function leagueHTML(L){
+  const views=[["overall","Standings"],...L.played.map(n=>[String(n),"Week "+n])];
+  const cur=L.cur, wkCount=L.weeks.length;
+  let status="";
+  if(L.mode==="none") status="Season starting soon";
+  else{const wl=weekList(L,cur);status=`Week <b>${cur}</b>`+(wl.posted<wl.total?` · ${wl.posted} of ${wl.total} ${L.kind==="team"?"teams":"players"} posted`:"");}
+  let body="",note="";
+  const filt=e=>(state.night==="all"||e.night===state.night)&&(!state.q||e.name.toLowerCase().includes(state.q.toLowerCase()));
+  if(state.view==="overall"){
+    const list=L.entries.filter(filt);
+    const strokesMode=L.mode!=="points";
+    const head=`<div class="row head"><div>Rank</div><div>${L.kind==="team"?"Team":"Player"}</div><div class="stats">${strokesMode?`<div class="stat">Rds</div><div class="stat">Avg</div>`:`<div class="stat">Pts</div><div class="stat">Strk</div>`}</div></div>`;
+    body=head+(list.length?list.map(e=>rowHTML(L,e,strokesMode?[[e.rounds,"rds"],[e.avg==null?"–":fmt(e.avg),"avg"]]:[[fmt(e.total),"pts"],[e.strokes||"–","strk"]])).join(""):`<div class="empty">No match.</div>`);
+    if(L.mode==="strokes") note="Points for this league haven't been posted yet, so it's ranked by average score for now.";
+    if(L.mode==="points") note="Ranked by total points. Ties share a rank and are listed by fewest total strokes. Tap any "+(L.kind==="team"?"team":"player")+" for week-by-week results.";
+  }else{
+    const n=+state.view, wl=weekList(L,n), w=L.weeks.find(x=>x.n===n);
+    const list=wl.list.filter(filt);
+    const low=Math.min(...wl.list.map(e=>e.wstk));
+    const head=`<div class="row head"><div>Wk ${n}</div><div>${L.kind==="team"?"Team":"Player"}</div><div class="stats">${wl.usePts?`<div class="stat">Pts</div>`:""}<div class="stat">Score</div></div></div>`;
+    body=head+(list.length?list.map(e=>rowHTML(L,e,[...(wl.usePts?[[fmt(e.wpts),"pts"]]:[]),[e.wstk+(e.wstk===low?" ★":""),"score"]])).join(""):`<div class="empty">No scores posted yet.</div>`);
+    note=`★ Low round of the week.`+(w&&w.mult>1?` Week ${n} counts ${w.mult}x points.`:"")+(wl.posted<wl.total?` ${wl.total-wl.posted} still to post.`:"");
+  }
+  return `<div class="lg-head"><h2>${esc(L.name)}</h2><div class="status">${status}</div></div>
+  <div class="controls">
+    ${views.length>1?`<div class="seg" role="group" aria-label="View">${views.map(([v,l])=>`<button data-view="${v}" aria-pressed="${state.view===v}">${l}</button>`).join("")}</div>`:""}
+    <div class="filters">
+      ${L.nights.length>1?`<div class="seg" role="group" aria-label="Night">${["all",...L.nights].map(n=>`<button data-night="${n}" aria-pressed="${state.night===n}">${n==="all"?"All nights":n}</button>`).join("")}</div>`:""}
+      ${L.entries.length>8?`<input class="search" type="search" placeholder="Find your ${L.kind}…" value="${esc(state.q)}" aria-label="Search">`:""}
+    </div>
+  </div>
+  <div class="board">${body}</div>
+  ${note?`<p class="note">${note}</p>`:""}`;
+}
+function rowHTML(L,e,stats){
+  const id=L.id+"|"+e.name, open=state.open.has(id);
+  const detail=L.weeks.map(w=>{const d=e.wk[w.n];return `<div class="wk${d?"":" na"}"><div class="a">Wk ${w.n}${w.mult>1?" · "+w.mult+"x":""}</div><div class="b">${d?(L.mode==="points"&&d.pts!=null?fmt(d.pts)+" pts":d.stk):"–"}</div><div class="c">${d&&L.mode==="points"&&d.pts!=null?d.stk+" strokes":"&nbsp;"}</div></div>`;}).join("");
+  return `<button class="row${open?" open":""}" data-row="${esc(id)}" aria-expanded="${open}">
+    <div class="rk${e.rank===1?" top1":""} num">${e.rankLabel}</div>
+    <div class="nm"><div class="t">${esc(e.name)}</div>${e.slot?`<div class="s">${esc(e.slot)}</div>`:""}</div>
+    <div class="stats">${stats.map(([v,l])=>`<div class="stat"><div class="v num">${esc(v)}</div></div>`).join("")}</div>
+    <div class="detail"><div class="wk-grid">${detail}</div></div></button>`;
+}
+function recordsHTML(){
+  return `<div class="lg-head"><h2>AGC League Records</h2><div class="status">All-time bests across every league</div></div>
+  <div class="records">${DATA.records.map(r=>`<div class="rec"><div class="c">${esc(r.cat)}</div><div class="r">${esc(r.rec)}</div>${r.who?`<div class="w">${esc(r.who)}${r.team?` <span class="m">(${esc(r.team)})</span>`:""}</div>`:""}<div class="m">${esc([r.course,r.season].filter(Boolean).join(" · "))}</div></div>`).join("")}</div>`;
+}
+function bindSite(){
+  const app=document.getElementById("app");
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{state.league=b.dataset.tab;state.view="overall";state.night="all";state.q="";state.open.clear();try{history.replaceState(null,"","#"+state.league);}catch(e){}renderSite();});
+  app.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{state.view=b.dataset.view;renderSite();});
+  app.querySelectorAll("[data-night]").forEach(b=>b.onclick=()=>{state.night=b.dataset.night;renderSite();});
+  app.querySelectorAll("[data-row]").forEach(b=>b.onclick=()=>{const id=b.dataset.row;state.open.has(id)?state.open.delete(id):state.open.add(id);b.classList.toggle("open");b.setAttribute("aria-expanded",state.open.has(id));});
+  const s=app.querySelector(".search");
+  if(s){s.oninput=()=>{state.q=s.value;const pos=s.selectionStart;renderSite();const n=document.querySelector(".search");n.focus();n.setSelectionRange(pos,pos);};}
+}
+
+/* ---------------- TV mode ---------------- */
+let tvTimer=null,tvIndex=0;
+function buildSlides(){
+  const leagues=DATA.leagues.filter(l=>l.tv&&l.mode!=="none");
+  const promos=DATA.promos.slice();
+  const out=[];let p=0;
+  leagues.forEach((L,i)=>{out.push({type:"league",L});if(promos.length){out.push({type:"promo",P:promos[p%promos.length]});p++;}});
+  if(DATA.records.length) out.push({type:"records"});
+  while(p<promos.length){out.push({type:"promo",P:promos[p++]});}
+  return out;
+}
+function tvLeagueHTML(L){
+  const per=CONFIG.tvRowsPerColumn;
+  const pool=L.entries.filter(e=>e.rounds>0), list=pool.slice(0,pool.length>per+2?per*2:pool.length), two=list.length>per+2;
+  const strokes=L.mode!=="points";
+  const row=e=>`<div class="tv-row${e.rank===1?" lead":""}"><div class="r num">${e.rankLabel}</div><div class="n">${esc(e.name)}${e.slot?`<small>${esc(e.slot)}</small>`:""}</div><div class="p num">${strokes?(e.avg==null?"–":fmt(e.avg)):fmt(e.total)}</div><div class="k num">${strokes?e.rounds:(e.strokes||"–")}</div></div>`;
+  const head=`<div class="tv-row h"><div></div><div>${L.kind==="team"?"Team":"Player"}</div><div style="text-align:right">${strokes?"Avg":"Pts"}</div><div style="text-align:right">${strokes?"Rds":"Strk"}</div></div>`;
+  const cols=two?[list.slice(0,per),list.slice(per)]:[list];
+  const wl=weekList(L,L.cur);
+  const low=wl.list.slice().sort((a,b)=>a.wstk-b.wstk)[0];
+  const more=pool.length-list.length;
+  return `<div class="s-kicker">League Standings · Week ${L.cur}</div>
+  <div class="s-title">${esc(L.name)}${wl.posted<wl.total?`<span class="pill">Week ${L.cur} in progress</span>`:""}</div>
+  <div class="tv-board${two?" two":""}">${cols.map(c=>`<div class="tv-col">${head}${c.map(row).join("")}</div>`).join("")}</div>
+  <div class="tv-side">${low?`<div class="chip"><div class="a">Low round · Week ${L.cur}</div><div class="b">${esc(low.name)} · ${low.wstk}</div></div>`:""}${more>0?`<div class="chip"><div class="a">+${more} more ${L.kind==="team"?"teams":"players"}</div><div class="b">Full standings at ${esc(CONFIG.siteUrl)}</div></div>`:""}</div>`;
+}
+function tvPromoHTML(P){
+  const img=P.image;
+  return `<div class="promo${img?"":" noimg"}"><div>
+    <div class="s-kicker">Coming up at Always</div>
+    <h3>${esc(P.headline)}</h3>
+    ${P.when?`<div class="when">${esc(P.when)}</div>`:""}
+    ${P.details?`<div class="det">${esc(P.details)}</div>`:""}
+    ${P.link?`<div class="go"><div class="qr">${qrSvg(P.link)}</div><span>Scan to sign up<b>${esc(prettyUrl(P.link))}</b></span></div>`:""}
+  </div>${img?`<div class="img"><img src="${esc(img)}" alt=""></div>`:""}</div>`;
+}
+function tvRecordsHTML(){
+  return `<div class="s-kicker">Think you can beat these?</div><div class="s-title">AGC League Records</div>
+  <div class="tv-recs">${DATA.records.slice(0,9).map(r=>`<div class="tv-rec"><div class="c">${esc(r.cat)}</div><div class="r">${esc(r.rec)}</div>${r.who?`<div class="w">${esc(r.who)}</div>`:""}<div class="m">${esc([r.course,r.season].filter(Boolean).join(" · "))}</div></div>`).join("")}</div>`;
+}
+function renderTV(){
+  document.body.className="tv";document.body.ondblclick=()=>{if(DATA.source==="snapshot")location.hash="";};
+  const slides=buildSlides();
+  if(tvIndex>=slides.length)tvIndex=0;
+  document.getElementById("app").innerHTML=`<div class="tv-wrap">
+    <div class="tv-bar"><img src="${ASSETS.logoInverse}" alt="Always Golf Club"><div class="tv-clock num" id="clock"></div></div>
+    <div class="tv-stage">${slides.map((s,i)=>`<section class="slide${i===tvIndex?" on":""}">${s.type==="league"?tvLeagueHTML(s.L):s.type==="promo"?tvPromoHTML(s.P):tvRecordsHTML()}</section>`).join("")}</div>
+    <div class="tv-foot"><div class="tv-cta"><div class="qr">${qrSvg(CONFIG.siteUrl)}</div><div>Live standings on your phone<br><b>${esc(CONFIG.siteUrl)}</b></div></div><div class="dots">${slides.map((s,i)=>`<i class="${i===tvIndex?"on":""}"></i>`).join("")}</div></div>
+    <div class="progress" id="prog"></div></div>`;
+  tick();startProgress();
+  clearInterval(tvTimer);
+  tvTimer=setInterval(()=>{const secs=document.querySelectorAll(".slide"),dots=document.querySelectorAll(".dots i");if(!secs.length)return;
+    secs[tvIndex].classList.remove("on");dots[tvIndex]?.classList.remove("on");
+    tvIndex=(tvIndex+1)%secs.length;secs[tvIndex].classList.add("on");dots[tvIndex]?.classList.add("on");startProgress();},CONFIG.tvSeconds*1000);
+}
+function startProgress(){const p=document.getElementById("prog");if(!p)return;p.style.transition="none";p.style.width="0";void p.offsetWidth;p.style.transition=`width ${CONFIG.tvSeconds}s linear`;p.style.width="100%";}
+function tick(){const c=document.getElementById("clock");if(c)c.textContent=new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});}
+setInterval(tick,15000);
+
+/* ---------------- Boot ---------------- */
+const isTV=()=>location.hash==="#tv"||/[?&]tv(=1)?(&|$)/.test(location.search);
+async function boot(){
+  try{await load();}catch(e){console.error(e);if(!DATA.leagues.length){document.getElementById("app").innerHTML='<div class="empty">Standings are taking a breather. Try again in a minute.</div>';}}
+  isTV()?renderTV():renderSite();
+}
+boot();
+window.addEventListener("hashchange",()=>{if(isTV())renderTV();else{clearInterval(tvTimer);const h=location.hash.slice(1);if(h&&h!==state.league&&(h==="records"||DATA.leagues.some(l=>l.id===h))){state.league=h;state.view="overall";}renderSite();}});
+setInterval(async()=>{try{await load();isTV()?renderTV():(document.activeElement?.classList.contains("search")||renderSite());}catch(e){}},CONFIG.refreshMinutes*60000);
+if(isTV()) setTimeout(()=>location.reload(),6*3600000); // fresh start every 6 hours on the TV
+</script>
+</body>
+</html>
