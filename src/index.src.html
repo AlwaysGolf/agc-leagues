@@ -145,7 +145,8 @@ body.tv{background:var(--forest);color:var(--sand);overflow:hidden;cursor:none;f
 .tv-rec .r{font-size:3.2em;font-weight:900;line-height:1.1}
 .tv-rec .w{font-size:1.8em;font-weight:800}
 .tv-rec .m{font-size:1.4em;color:#bcd6c4;font-weight:600}
-.spons{display:grid;grid-template-columns:repeat(3,1fr);gap:1.8em;margin-top:.6em}
+.spons{display:grid;grid-template-columns:repeat(4,1fr);gap:1.6em;margin-top:.6em}
+.sp.wide{grid-column:span 2;padding:.6em 2em}
 .sp{background:#fff;border-radius:1.2em;height:14em;display:flex;align-items:center;justify-content:center;padding:1.8em 2.4em;box-shadow:0 .8em 2.4em rgba(0,0,0,.25)}
 .sp img{max-width:100%;max-height:100%;object-fit:contain}
 </style>
@@ -175,6 +176,7 @@ const CONFIG = {
     {name:"Dumpsters.com", logo:"sponsors/dumpsters.png"},
     {name:"Antonio's Real Italian Pizza", logo:"sponsors/antonios.png"},
     {name:"Golf Glove Club", logo:"sponsors/golf-glove-club.png"},
+    {name:"TeeBox Bets + Marie Nader (Howard Hanna)", logo:"sponsors/teebox-marie-nader.webp", wide:true},
   ],
 };
 const ASSETS = { logo:"__LOGO__", logoInverse:"__LOGOINV__", coin:"__COIN__" };
@@ -427,7 +429,7 @@ function tvRecordsHTML(){
 }
 function tvSponsorsHTML(){
   return `<div class="s-kicker">Thanks to our partners</div><div class="s-title">Proudly Supported By</div>
-  <div class="spons">${CONFIG.sponsors.map(x=>`<div class="sp"><img src="${esc(x.logo)}" alt="${esc(x.name)}"></div>`).join("")}</div>`;
+  <div class="spons">${CONFIG.sponsors.map(x=>`<div class="sp${x.wide?" wide":""}"><img src="${esc(x.logo)}" alt="${esc(x.name)}"></div>`).join("")}</div>`;
 }
 function renderTV(){
   document.body.className="tv";document.body.ondblclick=()=>{if(DATA.source==="snapshot")location.hash="";};
