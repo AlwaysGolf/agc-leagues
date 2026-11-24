@@ -11,7 +11,7 @@ The data lives in Google Sheets, so nobody edits this repo week to week.
 
 1. Ryan enters scores in each league's master sheet, the same as always.
 2. Each master sheet publishes **only its LEADERBOARD tab** to the web as CSV. Never publish the entire document, because the week tabs show who has paid.
-3. The **AGC League Hub** sheet (in AGC MAIN) lists those CSV links (Leagues tab) and the TV promo slides (TV Promos tab).
+3. The **AGC League Hub** sheet (AGC MAIN → Leagues folder) lists those CSV links (Leagues tab) and the TV promo slides (TV Promos tab).
 4. The page reads the hub and the leaderboards every 5 minutes. Rankings, ties, and the "low round of the week" are calculated in the page.
 
 New session: publish the new master sheets' LEADERBOARD tabs and paste the links into the hub. That's it.
