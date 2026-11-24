@@ -16,6 +16,10 @@ The data lives in Google Sheets, so nobody edits this repo week to week.
 
 New session: publish the new master sheets' LEADERBOARD tabs and paste the links into the hub. That's it.
 
+## Playoff brackets
+
+Ryan keeps building brackets in Google Slides. He publishes the deck (File → Share → Publish to web) and pastes that link into the league's **Playoff Bracket** cell in the hub's Leagues tab, with **Bracket Slides** listing that league's slides (e.g. `1,2`). While a link is set, the league opens on a Playoffs view on phones, and the TV shows those slides instead of the standings. TV bracket slides reload off-screen every few minutes so score updates appear without flashing. Clear the cells when playoffs end.
+
 ## Files
 
 - `index.html`: the built, self-contained page (what's served)
