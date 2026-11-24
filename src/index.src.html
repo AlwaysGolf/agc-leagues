@@ -88,6 +88,14 @@ main{max-width:880px;margin:0 auto;padding:16px 16px 40px}
 footer{max-width:880px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:13px;line-height:1.5}
 footer a{color:var(--fairway);font-weight:700}
 .updated{font-size:12px;color:var(--muted);margin-top:8px}
+.seg button.po{border-color:var(--orange);color:var(--orange)}
+.seg button.po[aria-pressed=true]{background:var(--orange);border-color:var(--orange);color:#fff}
+.bk-list{display:flex;flex-direction:column;gap:14px}
+.bk{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px}
+.bk-frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--forest)}
+.bk-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.bk-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 4px 1px;font-size:13px;font-weight:700;color:var(--muted)}
+.bk-foot a{color:var(--fairway);text-decoration:none;font-weight:800;white-space:nowrap}
 @media (max-width:420px){.stats{gap:10px}.stat{min-width:38px}.stat .v{font-size:17px}.hero h1{font-size:26px}}
 
 /* ---------- TV mode (16:9, scales with screen width) ---------- */
@@ -149,6 +157,10 @@ body.tv{background:var(--forest);color:var(--sand);overflow:hidden;cursor:none;f
 .sp.wide{grid-column:span 2;padding:.6em 2em}
 .sp{background:#fff;border-radius:1.2em;height:14em;display:flex;align-items:center;justify-content:center;padding:1.8em 2.4em;box-shadow:0 .8em 2.4em rgba(0,0,0,.25)}
 .sp img{max-width:100%;max-height:100%;object-fit:contain}
+.tv-bk{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:.4em 0 .6em}
+.tv-bk .fr{height:100%;max-width:100%;aspect-ratio:16/9;background:#fff;border-radius:.9em;overflow:hidden;box-shadow:0 1.2em 3.5em rgba(0,0,0,.4)}
+.tv-bk iframe{width:100%;height:100%;border:0;display:block;pointer-events:none}
+.s-kicker.po{color:var(--orange)}
 </style>
 </head>
 <body>
@@ -265,6 +277,25 @@ function weekList(L,n){
   return {list:out,usePts,posted:out.length,total:L.entries.length};
 }
 
+/* ---------------- Playoff brackets (Google Slides, published to web) ----------------
+   The hub's Leagues tab has a "Playoff Bracket" link (the deck's Publish-to-web link)
+   and optional "Bracket Slides" (e.g. "1,2" or "3-4"). Slides are 1-based. */
+function parseBracket(url,slides){
+  url=clean(url); if(!url) return null;
+  let base=null,pub=false,m;
+  if((m=url.match(/docs\.google\.com\/presentation\/d\/e\/([\w-]+)/))){base="https://docs.google.com/presentation/d/e/"+m[1];pub=true;}
+  else if((m=url.match(/docs\.google\.com\/presentation\/d\/([\w-]{20,})/))) base="https://docs.google.com/presentation/d/"+m[1];
+  if(!base) return null;
+  const nums=[];
+  clean(slides).split(/[,;&\s]+/).forEach(p=>{const r=p.match(/^(\d+)\s*-\s*(\d+)$/);
+    if(r){for(let i=+r[1];i<=+r[2]&&nums.length<12;i++)nums.push(i);} else if(/^\d+$/.test(p)&&+p>0) nums.push(+p);});
+  const q=(n,minimal)=>`?start=false&loop=false&delayms=600000${minimal?"&rm=minimal":""}${n?"&slide="+n:""}`;
+  return {slides:[...new Set(nums)],
+    embed:(n,minimal)=>base+"/embed"+q(n,minimal),
+    open:n=>base+(pub?"/pub":"/embed")+q(n,false),
+    key:base+"|"+nums.join(",")};
+}
+
 /* ---------------- Promos / records ---------------- */
 function rowsToObjects(csv){
   const rows=parseCSV(csv).filter(r=>r.some(c=>clean(c)));
@@ -292,9 +323,9 @@ async function load(){
     return;
   }
   const hub=rowsToObjects(await getText(CONFIG.hubLeaguesCsv));
-  const metas=hub.map(o=>({name:pick(o,"league"),url:pick(o,"leaderboard","csv","link"),site:!/^n/i.test(pick(o,"website","site")),tv:!/^n/i.test(pick(o,"tv"))})).filter(m=>m.name&&m.url);
+  const metas=hub.map(o=>({name:pick(o,"league"),url:pick(o,"leaderboard","csv","link"),site:!/^n/i.test(pick(o,"website","site")),tv:!/^n/i.test(pick(o,"tv")),bracket:parseBracket(pick(o,"playoff"),pick(o,"bracket slide"))})).filter(m=>m.name&&m.url);
   const prev=DATA.source==="live"?DATA:{leagues:[],promos:[],records:[]};
-  const leagues=(await Promise.all(metas.map(async m=>{try{return parseLeague(await getText(m.url),m);}catch(e){console.warn("league failed",m.name,e);return prev.leagues.find(l=>l.name===m.name)||null;}}))).filter(Boolean);
+  const leagues=(await Promise.all(metas.map(async m=>{let L=null;try{L=parseLeague(await getText(m.url),m);}catch(e){console.warn("league failed",m.name,e);L=prev.leagues.find(l=>l.name===m.name)||null;}if(L)L.bracket=m.bracket;return L;}))).filter(Boolean);
   let promos=prev.promos,records=prev.records;
   try{if(CONFIG.hubPromosCsv)promos=parsePromos(await getText(CONFIG.hubPromosCsv));}catch(e){console.warn(e);}
   try{if(CONFIG.recordsCsv)records=parseRecords(await getText(CONFIG.recordsCsv));}catch(e){console.warn(e);}
@@ -310,10 +341,12 @@ const prettyUrl=u=>u.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,"");
 
 /* ---------------- Website ---------------- */
 const state={league:null,view:"overall",night:"all",q:"",open:new Set()};
+// During playoffs (bracket link set in the hub), a league opens on its bracket.
+const defaultView=id=>DATA.leagues.find(l=>l.id===id)?.bracket?"playoffs":"overall";
 function renderSite(){
   const leagues=DATA.leagues.filter(l=>l.site);
   const h=location.hash.slice(1);
-  if(!state.league){state.league=(h==="records"||leagues.some(l=>l.id===h))?h:leagues[0]?.id;}
+  if(!state.league){state.league=(h==="records"||leagues.some(l=>l.id===h))?h:leagues[0]?.id;state.view=defaultView(state.league);}
   const tabs=[...leagues.map(l=>({id:l.id,name:l.name})),...(DATA.records.length?[{id:"records",name:"Records"}]:[])];
   const L=leagues.find(l=>l.id===state.league);
   document.body.className="";
@@ -329,10 +362,25 @@ function renderSite(){
   ${DATA.source==="snapshot"?`<div class="updated"><a href="#tv">▶ Preview the TV slideshow</a> (on the TV it fills the screen and loops)</div>`:""}<div class="updated">${DATA.source==="snapshot"?"Preview data from "+DATA.updated.toLocaleDateString():"Last checked "+DATA.updated.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</div></footer>`;
   bindSite();
 }
+function bracketHTML(L){
+  const B=L.bracket, list=B.slides.length?B.slides:[null];
+  const many=list.length>1;
+  return `<div class="bk-list">${list.map((n,i)=>`<div class="bk">
+    <div class="bk-frame"><iframe src="${esc(B.embed(n,!!n))}" title="${esc(L.name)} playoff bracket${many?" "+(i+1):""}" loading="${i?"lazy":"eager"}" allowfullscreen></iframe></div>
+    <div class="bk-foot"><span>${many?(i===0?"Main bracket":i===1&&list.length===2?"Consolation bracket":"Bracket "+(i+1)):n?"Playoff bracket":"Tap the arrows to flip through"}</span><a href="${esc(B.open(n))}" target="_blank" rel="noopener">Open full screen ↗</a></div>
+  </div>`).join("")}</div>`;
+}
 function leagueHTML(L){
-  const views=[["overall","Standings"],...L.played.map(n=>[String(n),"Week "+n])];
+  if(state.view==="playoffs"&&!L.bracket) state.view="overall";
+  const views=[...(L.bracket?[["playoffs","🏆 Playoffs"]]:[]),["overall","Standings"],...L.played.map(n=>[String(n),"Week "+n])];
   const cur=L.cur, wkCount=L.weeks.length;
   let status="";
+  if(state.view==="playoffs"){
+    return `<div class="lg-head"><h2>${esc(L.name)}</h2><div class="status"><b>Playoffs</b> · Brackets update as matches finish</div></div>
+    <div class="controls"><div class="seg" role="group" aria-label="View">${views.map(([v,l])=>`<button data-view="${v}" aria-pressed="${state.view===v}"${v==="playoffs"?' class="po"':""}>${l}</button>`).join("")}</div></div>
+    ${bracketHTML(L)}
+    <p class="note">On your phone, turn it sideways or tap “Open full screen” for a bigger view. Regular-season standings are under Standings.</p>`;
+  }
   if(L.mode==="none") status="Season starting soon";
   else{const wl=weekList(L,cur);status=`Week <b>${cur}</b>`+(wl.posted<wl.total?` · ${wl.posted} of ${wl.total} ${L.kind==="team"?"teams":"players"} posted`:"");}
   let body="",note="";
@@ -354,7 +402,7 @@ function leagueHTML(L){
   }
   return `<div class="lg-head"><h2>${esc(L.name)}</h2><div class="status">${status}</div></div>
   <div class="controls">
-    ${views.length>1?`<div class="seg" role="group" aria-label="View">${views.map(([v,l])=>`<button data-view="${v}" aria-pressed="${state.view===v}">${l}</button>`).join("")}</div>`:""}
+    ${views.length>1?`<div class="seg" role="group" aria-label="View">${views.map(([v,l])=>`<button data-view="${v}" aria-pressed="${state.view===v}"${v==="playoffs"?' class="po"':""}>${l}</button>`).join("")}</div>`:""}
     <div class="filters">
       ${L.nights.length>1?`<div class="seg" role="group" aria-label="Night">${["all",...L.nights].map(n=>`<button data-night="${n}" aria-pressed="${state.night===n}">${n==="all"?"All nights":n}</button>`).join("")}</div>`:""}
       ${L.entries.length>8?`<input class="search" type="search" placeholder="Find your ${L.kind}…" value="${esc(state.q)}" aria-label="Search">`:""}
@@ -378,7 +426,7 @@ function recordsHTML(){
 }
 function bindSite(){
   const app=document.getElementById("app");
-  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{state.league=b.dataset.tab;state.view="overall";state.night="all";state.q="";state.open.clear();try{history.replaceState(null,"","#"+state.league);}catch(e){}renderSite();});
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{state.league=b.dataset.tab;state.view=defaultView(state.league);state.night="all";state.q="";state.open.clear();try{history.replaceState(null,"","#"+state.league);}catch(e){}renderSite();});
   app.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{state.view=b.dataset.view;renderSite();});
   app.querySelectorAll("[data-night]").forEach(b=>b.onclick=()=>{state.night=b.dataset.night;renderSite();});
   app.querySelectorAll("[data-row]").forEach(b=>b.onclick=()=>{const id=b.dataset.row;state.open.has(id)?state.open.delete(id):state.open.add(id);b.classList.toggle("open");b.setAttribute("aria-expanded",state.open.has(id));});
@@ -389,10 +437,14 @@ function bindSite(){
 /* ---------------- TV mode ---------------- */
 let tvTimer=null,tvIndex=0;
 function buildSlides(){
-  const leagues=DATA.leagues.filter(l=>l.tv&&l.mode!=="none");
+  const leagues=DATA.leagues.filter(l=>l.tv&&(l.bracket||l.mode!=="none"));
   const promos=DATA.promos.slice();
   const out=[];let p=0;
-  leagues.forEach((L,i)=>{out.push({type:"league",L});if(promos.length){out.push({type:"promo",P:promos[p%promos.length]});p++;}});
+  leagues.forEach((L,i)=>{
+    // Playoffs: the bracket slides replace the (now frozen) standings slide.
+    if(L.bracket){const s=L.bracket.slides.length?L.bracket.slides:[null];s.forEach((n,j)=>out.push({type:"bracket",L,n,j,of:s.length}));}
+    else out.push({type:"league",L});
+    if(promos.length){out.push({type:"promo",P:promos[p%promos.length]});p++;}});
   if(DATA.records.length) out.push({type:"records"});
   while(p<promos.length){out.push({type:"promo",P:promos[p++]});}
   if((CONFIG.sponsors||[]).length) out.splice(Math.ceil(out.length/2),0,{type:"sponsors"});
@@ -413,6 +465,11 @@ function tvLeagueHTML(L){
   <div class="tv-board${two?" two":""}">${cols.map(c=>`<div class="tv-col">${head}${c.map(row).join("")}</div>`).join("")}</div>
   <div class="tv-side">${low?`<div class="chip"><div class="a">Low round · Week ${L.cur}</div><div class="b">${esc(low.name)} · ${low.wstk}</div></div>`:""}${more>0?`<div class="chip"><div class="a">+${more} more ${L.kind==="team"?"teams":"players"}</div><div class="b">Full standings at ${esc(CONFIG.siteUrl)}</div></div>`:""}</div>`;
 }
+function tvBracketHTML(s){
+  const lbl=s.of>1?(s.j===0?"Main bracket":s.j===1&&s.of===2?"Consolation":"Bracket "+(s.j+1)):"Bracket";
+  return `<div class="s-kicker po">Playoffs · ${esc(s.L.name)} · ${lbl}</div>
+  <div class="tv-bk"><div class="fr"><iframe src="${esc(s.L.bracket.embed(s.n||1,true))}" title="${esc(s.L.name)} playoff bracket" tabindex="-1" data-loaded="${Date.now()}"></iframe></div></div>`;
+}
 function tvPromoHTML(P){
   const img=P.image;
   return `<div class="promo${img?"":" noimg"}"><div>
@@ -431,20 +488,38 @@ function tvSponsorsHTML(){
   return `<div class="s-kicker">Thanks to our partners</div><div class="s-title">Proudly Supported By</div>
   <div class="spons">${CONFIG.sponsors.map(x=>`<div class="sp${x.wide?" wide":""}"><img src="${esc(x.logo)}" alt="${esc(x.name)}"></div>`).join("")}</div>`;
 }
+const slideHTML=s=>s.type==="league"?tvLeagueHTML(s.L):s.type==="bracket"?tvBracketHTML(s):s.type==="promo"?tvPromoHTML(s.P):s.type==="sponsors"?tvSponsorsHTML():tvRecordsHTML();
+const slideKey=s=>[s.type,s.L?.id,s.type==="bracket"?s.L.bracket.key+"#"+s.n:"",s.P?.headline].join("|");
+let tvKeys="";
 function renderTV(){
   document.body.className="tv";document.body.ondblclick=()=>{if(DATA.source==="snapshot")location.hash="";};
   const slides=buildSlides();
+  const keys=slides.map(slideKey).join("\n");
+  const secs=document.querySelectorAll(".tv-stage .slide");
+  // Same slide lineup as before: refresh the content in place, leaving bracket
+  // iframes alone so they never reload on screen. They get reloaded off-screen
+  // in the slide timer below, so new scores still show up.
+  if(keys===tvKeys&&secs.length===slides.length){slides.forEach((s,i)=>{if(s.type!=="bracket")secs[i].innerHTML=slideHTML(s);});return;}
+  tvKeys=keys;
   if(tvIndex>=slides.length)tvIndex=0;
   document.getElementById("app").innerHTML=`<div class="tv-wrap">
     <div class="tv-bar"><img src="${ASSETS.logoInverse}" alt="Always Golf Club"><div class="tv-clock num" id="clock"></div></div>
-    <div class="tv-stage">${slides.map((s,i)=>`<section class="slide${i===tvIndex?" on":""}">${s.type==="league"?tvLeagueHTML(s.L):s.type==="promo"?tvPromoHTML(s.P):s.type==="sponsors"?tvSponsorsHTML():tvRecordsHTML()}</section>`).join("")}</div>
+    <div class="tv-stage">${slides.map((s,i)=>`<section class="slide${i===tvIndex?" on":""}">${slideHTML(s)}</section>`).join("")}</div>
     <div class="tv-foot"><div class="tv-cta"><div class="qr">${qrSvg(CONFIG.siteUrl)}</div><div>Live standings on your phone<br><b>${esc(CONFIG.siteUrl)}</b></div></div><div class="dots">${slides.map((s,i)=>`<i class="${i===tvIndex?"on":""}"></i>`).join("")}</div></div>
     <div class="progress" id="prog"></div></div>`;
   tick();startProgress();
   clearInterval(tvTimer);
   tvTimer=setInterval(()=>{const secs=document.querySelectorAll(".slide"),dots=document.querySelectorAll(".dots i");if(!secs.length)return;
     secs[tvIndex].classList.remove("on");dots[tvIndex]?.classList.remove("on");
+    reloadBracket(secs[tvIndex]);
     tvIndex=(tvIndex+1)%secs.length;secs[tvIndex].classList.add("on");dots[tvIndex]?.classList.add("on");startProgress();},CONFIG.tvSeconds*1000);
+}
+// A bracket slide that just left the screen reloads (at most every refreshMinutes)
+// so it picks up Ryan's latest edits before it comes back around.
+function reloadBracket(sec){
+  const f=sec?.querySelector("iframe"); if(!f) return;
+  const now=Date.now(), last=+(f.dataset.loaded||0);
+  if(now-last>=CONFIG.refreshMinutes*60000){f.dataset.loaded=now;const src=f.src;f.src="about:blank";setTimeout(()=>{f.src=src;},50);}
 }
 function startProgress(){const p=document.getElementById("prog");if(!p)return;p.style.transition="none";p.style.width="0";void p.offsetWidth;p.style.transition=`width ${CONFIG.tvSeconds}s linear`;p.style.width="100%";}
 function tick(){const c=document.getElementById("clock");if(c)c.textContent=new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});}
@@ -457,8 +532,15 @@ async function boot(){
   isTV()?renderTV():renderSite();
 }
 boot();
-window.addEventListener("hashchange",()=>{if(isTV())renderTV();else{clearInterval(tvTimer);const h=location.hash.slice(1);if(h&&h!==state.league&&(h==="records"||DATA.leagues.some(l=>l.id===h))){state.league=h;state.view="overall";}renderSite();}});
-setInterval(async()=>{try{await load();isTV()?renderTV():(document.activeElement?.classList.contains("search")||renderSite());}catch(e){}},CONFIG.refreshMinutes*60000);
+window.addEventListener("hashchange",()=>{if(isTV())renderTV();else{clearInterval(tvTimer);tvKeys="";const h=location.hash.slice(1);if(h&&h!==state.league&&(h==="records"||DATA.leagues.some(l=>l.id===h))){state.league=h;state.view=defaultView(h);}renderSite();}});
+const siteBracketKey=()=>DATA.leagues.find(l=>l.id===state.league)?.bracket?.key||"";
+setInterval(async()=>{try{
+  const before=siteBracketKey();await load();
+  if(isTV()) return renderTV();
+  if(document.activeElement?.classList.contains("search")) return;
+  if(state.view==="playoffs"&&siteBracketKey()===before) return; // don't reload the bracket out from under someone reading it
+  renderSite();
+}catch(e){}},CONFIG.refreshMinutes*60000);
 if(isTV()) setTimeout(()=>location.reload(),6*3600000); // fresh start every 6 hours on the TV
 </script>
 </body>
